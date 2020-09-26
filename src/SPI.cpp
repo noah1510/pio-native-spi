@@ -17,7 +17,7 @@
  */
 
 #include "SPI.h"
-#include "HardwareSerial.h"
+//#include "HardwareSerial.h"
 
 #define SPI_PINS_HSPI			0 // Normal HSPI mode (MISO = GPIO12, MOSI = GPIO13, SCLK = GPIO14);
 #define SPI_PINS_HSPI_OVERLAP	1 // HSPI Overllaped in spi0 pins (MISO = SD0, MOSI = SDD1, SCLK = CLK);

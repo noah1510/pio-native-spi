@@ -18,7 +18,7 @@
 #ifndef _SPI_H_INCLUDED
 #define _SPI_H_INCLUDED
 
-#include <Arduino.h>
+#include <ArduinoFake.h>
 
 #define SPI_HAS_TRANSACTION 1
 
