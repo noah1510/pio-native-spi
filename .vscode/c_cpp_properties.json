@@ -1,0 +1,37 @@
+{
+    "configurations": [
+        {
+            "name": "!!! WARNING !!! AUTO-GENERATED FILE, PLEASE DO NOT MODIFY IT AND USE https://docs.platformio.org/page/projectconf/section_env_build.html#build-flags"
+        },
+        {
+            "name": "Linux",
+            "includePath": [
+                "/home/noa/Arduino/libraries/pio-native-spi/include",
+                "/home/noa/Arduino/libraries/pio-native-spi/src",
+                "/home/noa/Arduino/libraries/pio-native-spi/.pio/libdeps/native/ArduinoFake/src",
+                "/home/noa/.platformio/packages/tool-unity",
+                ""
+            ],
+            "browse": {
+                "limitSymbolsToIncludedHeaders": true,
+                "path": [
+                    "/home/noa/Arduino/libraries/pio-native-spi/include",
+                    "/home/noa/Arduino/libraries/pio-native-spi/src",
+                    "/home/noa/Arduino/libraries/pio-native-spi/.pio/libdeps/native/ArduinoFake/src",
+                    "/home/noa/.platformio/packages/tool-unity",
+                    ""
+                ]
+            },
+            "defines": [
+                "PLATFORMIO=50001",
+                ""
+            ],
+            "intelliSenseMode": "clang-x64",
+            "compilerPath": "/usr/bin/gcc",
+            "compilerArgs": [
+                ""
+            ]
+        }
+    ],
+    "version": 4
+}
