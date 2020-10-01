@@ -1,4 +1,9 @@
 /* 
+  SPI.h - SPI library for native unit testing
+  Copyright (c) 2020 Noa Sakurajin. All rights reserved.
+  This version is modified for use with platformio's natvie platform and its license is LGPL 2.1.
+  Below is the original copyright notice and license.
+
   SPI.h - SPI library for esp8266
   Copyright (c) 2015 Hristo Gochkov. All rights reserved.
   This file is part of the esp8266 core for Arduino environment.
@@ -15,6 +20,7 @@
   License along with this library; if not, write to the Free Software
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
+
 #ifndef _SPI_H_INCLUDED
 #define _SPI_H_INCLUDED
 
@@ -73,6 +79,11 @@ public:
 private:
   bool useHwCs;
   uint8_t pinSet;
+
+  SPISettings currentSPISettings;
+  uint16_t currentDataBits;
+  uint32_t currentClockDivider;
+
   void writeBytes_(const uint8_t * data, uint8_t size);
   void transferBytes_(const uint8_t * out, uint8_t * in, uint8_t size);
   void transferBytesAligned_(const uint8_t * out, uint8_t * in, uint8_t size);
