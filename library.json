@@ -1,7 +1,7 @@
 
 {
     "name": "Native SPI",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "keywords": "test SPI native",
     "description": "Testing SPI on native",
     "repository": {
@@ -10,7 +10,8 @@
     },
     "authors": {
       "name": "Noa Sakurajin",
-      "email": "noasakurajin@web.de"
+      "email": "noasakurajin@web.de",
+      "url": "https://www.patreon.com/noasakurajin"
     },
     "exclude": [
       "test"
@@ -18,6 +19,8 @@
     "build": {
       "libCompatMode": "off"
     },
+    "homepage": "https://github.com/noah1510/pio-native-spi",
+    "license": "LGPL-2.1",
     "frameworks": "arduino",
     "platforms": "native",
     "dependencies":{

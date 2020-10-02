@@ -1,1 +1,4 @@
 .pio
+doc
+doxywarn.txt
+*.tar.gz
