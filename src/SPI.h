@@ -24,6 +24,12 @@
 #ifndef _SPI_H_INCLUDED
 #define _SPI_H_INCLUDED
 
+#ifdef UNIT_TEST
+#ifndef SPI_OUTPUT
+#define SILENT_SPI
+#endif
+#endif
+
 #include <ArduinoFake.h>
 
 #define SPI_HAS_TRANSACTION 1
@@ -76,6 +82,11 @@ public:
   void writePattern(const uint8_t * data, uint8_t size, uint32_t repeat);
   void transferBytes(const uint8_t * out, uint8_t * in, uint32_t size);
   void endTransaction(void);
+  #ifdef SILENT_SPI
+    const static bool SPI_CONSOLE_OUTPUTS = false;
+  #else
+    const static bool SPI_CONSOLE_OUTPUTS = true;
+  #endif
 private:
   bool useHwCs;
   uint8_t pinSet;

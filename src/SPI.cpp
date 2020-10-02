@@ -62,64 +62,64 @@ bool SPIClass::pins(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
 }
 
 void SPIClass::begin() {
-    #ifndef SILENT_SPI
-    switch (pinSet) {
-    case SPI_PINS_HSPI_OVERLAP:
-        std::cout << "calling setHwCs(true)" << std::endl;
-        setHwCs(true);
-        break;
-    case SPI_PINS_HSPI:
-    default:
-        std::cout << "setting pinmode to SPECIAL for " << SCK << ", " << MISO << " and " << MOSI << std::endl;
-        break;
+    if(SPIClass::SPI_CONSOLE_OUTPUTS){
+        switch (pinSet) {
+        case SPI_PINS_HSPI_OVERLAP:
+            std::cout << "calling setHwCs(true)" << std::endl;
+            setHwCs(true);
+            break;
+        case SPI_PINS_HSPI:
+        default:
+            std::cout << "setting pinmode to SPECIAL for " << SCK << ", " << MISO << " and " << MOSI << std::endl;
+            break;
+        }
     }
-    #endif
 
     setFrequency(1000000); ///< 1MHz
 }
 
 void SPIClass::end() {
-    #ifndef SILENT_SPI
-    switch (pinSet) {
-    case SPI_PINS_HSPI:
-        std::cout << "setting pinmode to INPUT for " << SCK << ", " << MISO << " and " << MOSI << std::endl;
-        if (useHwCs) {
-            std::cout << "setting pinmode to INPUT for " << SS << std::endl;
-        }
-        break;
-    case SPI_PINS_HSPI_OVERLAP:
-        if (useHwCs) {
-            std::cout << "setting pinmode to INPUT for " << SPI_OVERLAP_SS << std::endl;
-        }
-        break;
-    }
-    #endif
-}
-
-void SPIClass::setHwCs(bool use) {
-    #ifndef SILENT_SPI
-    switch (pinSet) {
-    case SPI_PINS_HSPI:
-        if (use) {
-            std::cout << "setting pinmode to SPECIAL for " << SS << std::endl;
-        } else {
+    if(SPIClass::SPI_CONSOLE_OUTPUTS){
+        switch (pinSet) {
+        case SPI_PINS_HSPI:
+            std::cout << "setting pinmode to INPUT for " << SCK << ", " << MISO << " and " << MOSI << std::endl;
             if (useHwCs) {
                 std::cout << "setting pinmode to INPUT for " << SS << std::endl;
             }
-        }
-        break;
-    case SPI_PINS_HSPI_OVERLAP:
-        if (use) {
-            std::cout << "setting pinmode to FUNCTION_1 for " << SPI_OVERLAP_SS << std::endl;
-        }
-        else {
+            break;
+        case SPI_PINS_HSPI_OVERLAP:
             if (useHwCs) {
                 std::cout << "setting pinmode to INPUT for " << SPI_OVERLAP_SS << std::endl;
             }
+            break;
         }
-        break;
     }
-    #endif
+}
+
+void SPIClass::setHwCs(bool use) {
+    if(SPIClass::SPI_CONSOLE_OUTPUTS){
+        switch (pinSet) {
+        case SPI_PINS_HSPI:
+            if (use) {
+                std::cout << "setting pinmode to SPECIAL for " << SS << std::endl;
+            } else {
+                if (useHwCs) {
+                    std::cout << "setting pinmode to INPUT for " << SS << std::endl;
+                }
+            }
+            break;
+        case SPI_PINS_HSPI_OVERLAP:
+            if (use) {
+                std::cout << "setting pinmode to FUNCTION_1 for " << SPI_OVERLAP_SS << std::endl;
+            }
+            else {
+                if (useHwCs) {
+                    std::cout << "setting pinmode to INPUT for " << SPI_OVERLAP_SS << std::endl;
+                }
+            }
+            break;
+        }
+    }
 
     useHwCs = use;
 }
@@ -163,9 +163,9 @@ inline void SPIClass::setDataBits(uint16_t bits) {
 uint8_t SPIClass::transfer(uint8_t data) {
     // reset to 8Bit mode
     setDataBits(8);
-    #ifndef SILENT_SPI
-    std::cout << "transfering " << data << std::endl;
-    #endif
+    if(SPIClass::SPI_CONSOLE_OUTPUTS){
+        std::cout << "transfering " << data << std::endl;
+    }
     return data;
 }
 
