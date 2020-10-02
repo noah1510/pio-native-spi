@@ -163,7 +163,9 @@ inline void SPIClass::setDataBits(uint16_t bits) {
 uint8_t SPIClass::transfer(uint8_t data) {
     // reset to 8Bit mode
     setDataBits(8);
+    #ifndef SILENT_SPI
     std::cout << "transfering " << data << std::endl;
+    #endif
     return data;
 }
 
@@ -214,11 +216,10 @@ void SPIClass::write16(uint16_t data, bool msb) {
 }
 
 void SPIClass::write32(uint32_t data) {
-    write32(data, !(SPI1C & (SPICWBO | SPICRBO)));
+    write32(data, currentSPISettings._bitOrder == MSBFIRST);
 }
 
 void SPIClass::write32(uint32_t data, bool msb) {
-    while(SPI1CMD & SPIBUSY) {}
     // Set to 32Bits transfer
     setDataBits(32);
     if(msb) {
@@ -230,9 +231,8 @@ void SPIClass::write32(uint32_t data, bool msb) {
         // MSBFIRST Byte first
         data = (data_.b[3] | (data_.b[2] << 8) | (data_.b[1] << 16) | (data_.b[0] << 24));
     }
-    SPI1W0 = data;
-    SPI1CMD |= SPIBUSY;
-    while(SPI1CMD & SPIBUSY) {}
+    write16((data >> 16) & 0xFFFF, msb);
+    write16(data & 0xFFFF, msb);
 }
 
 /**
@@ -256,23 +256,16 @@ void SPIClass::writeBytes(const uint8_t * data, uint32_t size) {
 }
 
 void SPIClass::writeBytes_(const uint8_t * data, uint8_t size) {
-    while(SPI1CMD & SPIBUSY) {}
     // Set Bits to transfer
     setDataBits(size * 8);
 
-    uint32_t * fifoPtr = (uint32_t*)&SPI1W0;
     const uint32_t * dataPtr = (uint32_t*) data;
     uint32_t dataSize = ((size + 3) / 4);
 
     while(dataSize--) {
-        *fifoPtr = *dataPtr;
+        write32(*dataPtr);
         dataPtr++;
-        fifoPtr++;
     }
-
-    __sync_synchronize();
-    SPI1CMD |= SPIBUSY;
-    while(SPI1CMD & SPIBUSY) {}
 }
 
 /**
@@ -283,72 +276,16 @@ void SPIClass::writeBytes_(const uint8_t * data, uint8_t size) {
 void SPIClass::writePattern(const uint8_t * data, uint8_t size, uint32_t repeat) {
     if(size > 64) return; //max Hardware FIFO
 
-    while(SPI1CMD & SPIBUSY) {}
+    if(data == nullptr && size != 0 ){
+        return;
+    }
 
-    uint32_t buffer[16];
-    uint8_t *bufferPtr=(uint8_t *)&buffer;
-    const uint8_t *dataPtr = data;
-    volatile uint32_t * fifoPtr = &SPI1W0;
-    uint8_t r;
-    uint32_t repeatRem;
-    uint8_t i;
-
-    if((repeat * size) <= 64){
-        repeatRem = repeat * size;
-        r = repeat;
-        while(r--){
-            dataPtr = data;
-            for(i=0; i<size; i++){
-                *bufferPtr = *dataPtr;
-                bufferPtr++;
-                dataPtr++;
-            }
-        }
-
-        r = repeatRem;
-        if(r & 3) r = r / 4 + 1;
-        else r = r / 4;
-        for(i=0; i<r; i++){
-            *fifoPtr = buffer[i];
-            fifoPtr++;
-        }
-        SPI1U = SPIUMOSI | SPIUSSE;
-    } else {
-        //Orig
-        r = 64 / size;
-        repeatRem = repeat % r * size;
-        repeat = repeat / r;
-
-        while(r--){
-            dataPtr = data;
-            for(i=0; i<size; i++){
-                *bufferPtr = *dataPtr;
-                bufferPtr++;
-                dataPtr++;
-            }
-        }
-
-        //Fill fifo with data
-        for(i=0; i<16; i++){
-            *fifoPtr = buffer[i];
-            fifoPtr++;
-        }
-
-        r = 64 / size;
-
-        SPI1U = SPIUMOSI | SPIUSSE;
-        setDataBits(r * size * 8);
-        while(repeat--){
-            SPI1CMD |= SPIBUSY;
-            while(SPI1CMD & SPIBUSY) {}
+    for(uint32_t i = 0;i < repeat; i++){
+        for(uint8_t j = 0; j < size,j++){
+            write(data[j]);
         }
     }
-    //End orig
-    setDataBits(repeatRem * 8);
-    SPI1CMD |= SPIBUSY;
-    while(SPI1CMD & SPIBUSY) {}
 
-    SPI1U = SPIUMOSI | SPIUDUPLEX | SPIUSSE;
 }
 
 /**
@@ -378,70 +315,21 @@ void SPIClass::transferBytes(const uint8_t * out, uint8_t * in, uint32_t size) {
  * @param in  uint8_t *
  * @param size uint8_t (max 64)
  */
-
 void SPIClass::transferBytesAligned_(const uint8_t * out, uint8_t * in, uint8_t size) {
-    if (!size)
-        return;
-
-    while(SPI1CMD & SPIBUSY) {}
-    // Set in/out Bits to transfer
-
-    setDataBits(size * 8);
-
-    volatile uint32_t *fifoPtr = &SPI1W0;
-
-    if (out) {
-        uint8_t outSize = ((size + 3) / 4);
-        uint32_t *dataPtr = (uint32_t*) out;
-        while (outSize--) {
-            *(fifoPtr++) = *(dataPtr++);
-        }
-    } else {
-        uint8_t outSize = ((size + 3) / 4);
-        // no out data only read fill with dummy data!
-        while (outSize--) {
-            *(fifoPtr++) = 0xFFFFFFFF;
-        }
-    }
-
-    SPI1CMD |= SPIBUSY;
-    while(SPI1CMD & SPIBUSY) {}
-
-    if (in) {
-        uint32_t *dataPtr = (uint32_t*) in;
-        fifoPtr = &SPI1W0;
-        int inSize = size;
-        // Unlike outSize above, inSize tracks *bytes* since we must transfer only the requested bytes to the app to avoid overwriting other vars.
-        while (inSize >= 4) {
-            *(dataPtr++) = *(fifoPtr++);
-            inSize -= 4;
-            in += 4;
-        }
-        volatile uint8_t *fifoPtrB = (volatile uint8_t *)fifoPtr;
-        while (inSize--) {
-            *(in++) = *(fifoPtrB++);
-        }
-    }
+    transferBytes_(out,in,size);
 }
 
 
 void SPIClass::transferBytes_(const uint8_t * out, uint8_t * in, uint8_t size) {
-    if (!((uint32_t)out & 3) && !((uint32_t)in & 3)) {
-        // Input and output are both 32b aligned or NULL
-        transferBytesAligned_(out, in, size);
-    } else {
-        // HW FIFO has 64b limit and ::transferBytes breaks up large xfers into 64byte chunks before calling this function
-        // We know at this point at least one direction is misaligned, so use temporary buffer to align everything
-        // No need for separate out and in aligned copies, we can overwrite our out copy with the input data safely
-        uint8_t aligned[64]; // Stack vars will be 32b aligned
-        if (out) {
-            memcpy(aligned, out, size);
-        }
-        transferBytesAligned_(out ? aligned : nullptr, in ? aligned : nullptr, size);
-        if (in) {
-            memcpy(in, aligned, size);
-        }
+    if(out == nullptr || in == nullptr || size == 0){
+        return;
     }
+
+    for(uint8_t i = 0; i < size;i++){
+        uint8_t dat = out[i];
+        in[i] = transfer(dat);
+    }
+    
 }
 
 
