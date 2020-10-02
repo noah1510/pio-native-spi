@@ -281,7 +281,7 @@ void SPIClass::writePattern(const uint8_t * data, uint8_t size, uint32_t repeat)
     }
 
     for(uint32_t i = 0;i < repeat; i++){
-        for(uint8_t j = 0; j < size,j++){
+        for(uint8_t j = 0; j < size;j++){
             write(data[j]);
         }
     }
