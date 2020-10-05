@@ -30,7 +30,15 @@
 #endif
 #endif
 
-#include <ArduinoFake.h>
+#if (ARDUINO >= 100)
+#include <Arduino.h>
+#else
+#if __has_include("ArduinoFake.h")
+#include "ArduinoFake.h"
+#else
+#include <WProgram.h>
+#endif
+#endif
 
 #define SPI_HAS_TRANSACTION 1
 
